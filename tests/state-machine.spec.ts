@@ -3,7 +3,7 @@ import { StateDefinition, StateMachine } from '../src/state-machine.js';
 
 describe('state-machine', () => {
 	test('can instantiate a state machine', () => {
-		const sm = new StateMachine<'Idle' | 'Walking'>(
+		const sm = new StateMachine<'Idle' | 'Walking', {}, 'something'>(
 			{
 				Idle: {
 					transitions: [],
@@ -15,6 +15,7 @@ describe('state-machine', () => {
 				},
 			},
 			'Idle',
+			{},
 		);
 
 		expect(sm).toBeDefined();

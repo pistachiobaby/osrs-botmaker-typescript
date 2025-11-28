@@ -183,8 +183,9 @@ export class StateMachine<
 
 		// Handle transition tuple: [nextState, payload]
 		if (Array.isArray(result)) {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const [to, payload] = result;
-			this.switch(to, payload as any);
+			this.switch(to, payload);
 			return;
 		}
 
@@ -196,76 +197,120 @@ export class StateMachine<
 	}
 }
 
-// ============================================================================
-//   makeStateBuilder — factory tied to specific S (state union) and C (context)
-// ============================================================================
+type NoTransitions = {
+	has: false;
+	to: readonly [];
+};
 
-export function makeStateBuilder<S extends string, C>() {
-	return function createState<Name extends S>(name: Name) {
-		return {
-			transitions<To extends S>(...targets: readonly To[]) {
-				return {
-					payload<P = void>() {
-						return new StateBuilder<Name, To, C, P>(name, targets);
-					},
-					noPayload() {
-						return new StateBuilder<Name, To, C, void>(
-							name,
-							targets,
-						);
-					},
-				};
-			},
-			noTransitions: {
-				payload<P = void>() {
-					return new StateBuilder<Name, never, C, P>(name, []);
-				},
-				noPayload() {
-					return new StateBuilder<Name, never, C, void>(name, []);
-				},
-			},
-		};
-	};
-}
+type SomeTransitions<To extends readonly string[]> = {
+	has: true;
+	to: To;
+};
 
-class StateBuilder<Name extends string, To extends Name, C, P> {
+class StateBuilder<
+	S extends string, // all valid states
+	Name extends S, // this state's name
+	C, // context
+	P, // payload type
+	T extends NoTransitions | SomeTransitions<any>, // transitions
+> {
 	constructor(
 		private name: Name,
-		private transitions: readonly To[],
+		private _transitions: T,
+		private onEnterFn?: (ctx: C, payload: P) => void,
+		private onExitFn?: (ctx: C) => void,
+		private onTickFn?: (ctx: C) => any,
+		private onCheckFn?: any,
 	) {}
 
-	private _onEnter?: (ctx: C, payload: P) => void;
-	private _onExit?: (ctx: C) => void;
-	private _onTick?: (ctx: C) => any;
-	private _onCheckTransition?: (ctx: C) => To | null | undefined;
-	private _payloadMarker?: (p: P) => void;
+	// Optional payload
+	payload<PP>() {
+		return new StateBuilder<S, Name, C, PP, T>(
+			this.name,
+			this._transitions,
+			undefined,
+			this.onExitFn,
+			this.onTickFn,
+			this.onCheckFn,
+		);
+	}
+
+	// Optional transitions
+	transitions<const To extends readonly S[]>(...targets: To) {
+		return new StateBuilder<S, Name, C, P, SomeTransitions<To>>(
+			this.name,
+			{ has: true, to: targets },
+			this.onEnterFn,
+			this.onExitFn,
+			this.onTickFn,
+			undefined,
+		);
+	}
 
 	onEnter(fn: (ctx: C, payload: P) => void) {
-		this._onEnter = fn;
-		return this;
+		return new StateBuilder<S, Name, C, P, T>(
+			this.name,
+			this._transitions,
+			fn,
+			this.onExitFn,
+			this.onTickFn,
+			this.onCheckFn,
+		);
 	}
+
 	onExit(fn: (ctx: C) => void) {
-		this._onExit = fn;
-		return this;
+		return new StateBuilder<S, Name, C, P, T>(
+			this.name,
+			this._transitions,
+			this.onEnterFn,
+			fn,
+			this.onTickFn,
+			this.onCheckFn,
+		);
 	}
-	onTick(fn: (ctx: C) => any) {
-		this._onTick = fn;
-		return this;
+
+	onTick(fn: (ctx: C) => void | number | TransitionTuple<S, any>) {
+		return new StateBuilder<S, Name, C, P, T>(
+			this.name,
+			this._transitions,
+			this.onEnterFn,
+			this.onExitFn,
+			fn,
+			this.onCheckFn,
+		);
 	}
-	onCheckTransition(fn: (ctx: C) => To | null | undefined) {
-		this._onCheckTransition = fn;
-		return this;
+
+	onCheckTransition(
+		this: StateBuilder<S, Name, C, P, SomeTransitions<any>>,
+		fn: (ctx: C) => T['to'][number] | null | undefined,
+	) {
+		return new StateBuilder<S, Name, C, P, SomeTransitions<T['to']>>(
+			this.name,
+			this._transitions,
+			this.onEnterFn,
+			this.onExitFn,
+			this.onTickFn,
+			fn,
+		);
 	}
 
 	build() {
-		// Build a syntactically correct raw StateConfig
 		return {
-			transitions: this.transitions,
-			payload: this._payloadMarker,
-			onEnter: this._onEnter,
-			onExit: this._onExit,
-			onTick: this._onTick!,
-			onCheckTransition: this._onCheckTransition,
-		} as StateConfig<Name, readonly To[], C, P>;
+			name: this.name,
+			transitions: this._transitions.to,
+			onEnter: this.onEnterFn,
+			onExit: this.onExitFn,
+			onTick: this.onTickFn!,
+			onCheckTransition: this.onCheckFn,
+		};
 	}
+}
+
+export function makeStateBuilder<S extends string, C>() {
+	return function createState<Name extends S>(name: Name) {
+		return new StateBuilder<S, Name, C, void, NoTransitions>(name, {
+			has: false,
+			to: [],
+		});
+	};
 }

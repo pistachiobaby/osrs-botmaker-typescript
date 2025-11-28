@@ -30,6 +30,7 @@ export default [
 			'unicorn/prefer-spread': 'off',
 			'unicorn/no-null': 'off',
 			'unicorn/no-array-for-each': 'off', // TODO: Force array for each
+			'unicorn/prevent-abbreviations': 'off',
 		},
 	},
 	{
