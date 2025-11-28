@@ -22,6 +22,6 @@
 		"types": [],
 		"plugins": []
 	},
-	"include": ["src/**/*.ts"],
+	"include": ["src/**/*.ts", "tests/**/*.ts"],
 	"exclude": ["node_modules", "tmp"]
 }

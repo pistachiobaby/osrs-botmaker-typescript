@@ -17,7 +17,8 @@
 		"lint": "eslint . --quiet",
 		"build": "rollup -c rollup.config.js",
 		"compile": "pnpm build",
-		"watch": "rollup --watch -c rollup.config.js"
+		"watch": "rollup --watch -c rollup.config.js",
+		"test": "vitest"
 	},
 	"devDependencies": {
 		"@babel/preset-env": "^7.24.6",
@@ -49,9 +50,10 @@
 		"rollup-plugin-cleanup": "^3.2.1",
 		"tsx": "^4.7.1",
 		"typescript": "5.2.2",
-		"typescript-eslint": "^7.1.1"
+		"typescript-eslint": "^7.1.1",
+		"vitest": "^4.0.14"
 	},
 	"dependencies": {
-		"@deafwave/osrs-botmaker-types": "^0.5.8"
+		"@deafwave/osrs-botmaker-types": "^0.7.3"
 	}
 }

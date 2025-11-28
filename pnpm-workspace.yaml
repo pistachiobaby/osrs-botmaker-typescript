@@ -1,0 +1,6 @@
+ignoredBuiltDependencies:
+  - esbuild
+  - unrs-resolver
+
+overrides:
+  '@deafwave/osrs-botmaker-types': link:C:/Users/nicho/AppData/Local/pnpm/global/5/node_modules/@deafwave/osrs-botmaker-types
