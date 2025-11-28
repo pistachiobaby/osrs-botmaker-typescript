@@ -9,34 +9,4 @@ const ThievingState = {
 	EatFood: 'Thieving.EatFood',
 } as const;
 
-export type ThievingState = (typeof ThievingState)[keyof typeof ThievingState];
-
-const Definitions: StateDefinition<ThievingState> = {
-	'Thieving.WalkToLocation': WalkToLocation,
-	'Thieving.ScanNPCs': {
-		transitions: [],
-		onEnter: undefined,
-		onExit: undefined,
-		onTick: function (): void | number {},
-	},
-	'Thieving.Stunned': {
-		transitions: [],
-		onEnter: undefined,
-		onExit: undefined,
-		onTick: function (): void | number {},
-	},
-	'Theiving.Interact': {
-		transitions: [],
-		onEnter: undefined,
-		onExit: undefined,
-		onTick: function (): void | number {},
-	},
-	'Thieving.EatFood': {
-		transitions: [],
-		onEnter: undefined,
-		onExit: undefined,
-		onTick: function (): void | number {},
-	},
-};
-
-export default Definitions;
+export type ThievingStates = (typeof ThievingState)[keyof typeof ThievingState];

@@ -16,7 +16,7 @@ import { overlay, overlayManager } from './overlay.js';
  */
 
 const sm = new StateMachine(
-	BehaviourStateDefinions,
+	,
 	'Cooking.FindCookingSource',
 );
 

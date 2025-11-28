@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
 export const overlayManager =
 	net.runelite.client.RuneLite.getInjector().getInstance(
 		net.runelite.client.ui.overlay.OverlayManager,
@@ -7,6 +5,17 @@ export const overlayManager =
 
 const TitleComponent = net.runelite.client.ui.overlay.components.TitleComponent;
 const LineComponent = net.runelite.client.ui.overlay.components.LineComponent;
+
+let overlayNextStateText: string = '';
+let overlayCurrentStateText: string = '';
+
+export function setCurrentOverlayStateText(text: string) {
+	overlayCurrentStateText = text;
+}
+
+export function setOverlayNextStateText(text: string) {
+	overlayNextStateText = text;
+}
 
 export const overlay = new JavaAdapter(
 	net.runelite.client.ui.overlay.OverlayPanel,
@@ -30,8 +39,17 @@ export const overlay = new JavaAdapter(
 				.getChildren()
 				.add(
 					LineComponent.builder()
-						.left('Cool:')
-						.right('Story bro')
+						.left('State:')
+						.right(overlayCurrentStateText)
+						.build(),
+				);
+
+			this.panelComponent
+				.getChildren()
+				.add(
+					LineComponent.builder()
+						.left('Transitions:')
+						.right(overlayNextStateText)
 						.build(),
 				);
 

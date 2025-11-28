@@ -135,7 +135,7 @@ describe('state-machine', () => {
 			},
 		};
 
-		const sm = new StateMachine(definitions, 'Idle');
+		const sm = new StateMachine(definitions, 'Idle', {});
 		expect(sm.state).toEqual('Idle');
 
 		sm.tick();

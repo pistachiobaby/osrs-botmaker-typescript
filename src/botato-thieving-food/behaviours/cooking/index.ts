@@ -1,4 +1,5 @@
-import { StateDefinition } from '../../../state-machine.js';
+import { defineStates, makeStateBuilder } from '../../../state-machine.js';
+import findCookingSource from './find-cooking-source.js';
 
 export const CookingState = {
 	FindCookingSource: 'Cooking.FindCookingSource',
@@ -8,23 +9,19 @@ export const CookingState = {
 
 export type CookingStates = (typeof CookingState)[keyof typeof CookingState];
 
-let cookingSource: net.runelite.api.TileObject | null;
+interface CookingContext {
+	lastInteractionTick: number;
+}
 
-const Definitions: StateDefinition<CookingStates> = {
-	[CookingState.FindCookingSource]: {
-		transitions: [],
-		onEnter: undefined,
-		onExit: undefined,
-		onTick: function (): void | number {},
-	},
-	[CookingState.WalkToCookingSource]: {
-		transitions: [CookingState.CookAtSource],
-		onTick: function (): void | number {},
-	},
-	[CookingState.CookAtSource]: {
-		transitions: [],
-		onTick: function (): void | number {},
-	},
+export type CookAtSourcePayload = {
+	cookingSourceTileObject: net.runelite.api.TileObject;
 };
 
-export default Definitions;
+export const createCookingState = makeStateBuilder<
+	CookingStates,
+	CookingContext
+>();
+
+export default defineStates({
+	findCookingSource,
+});
