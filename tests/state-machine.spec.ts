@@ -3,7 +3,11 @@ import { StateDefinition, StateMachine } from '../src/state-machine.js';
 
 describe('state-machine', () => {
 	test('can instantiate a state machine', () => {
-		const sm = new StateMachine<'Idle' | 'Walking', {}, 'something'>(
+		const sm = new StateMachine<
+			'Idle' | 'Walking',
+			Record<string, never>,
+			any
+		>(
 			{
 				Idle: {
 					transitions: [],
@@ -22,7 +26,11 @@ describe('state-machine', () => {
 	});
 
 	test('can transition to another state', () => {
-		const sm = new StateMachine<'Idle' | 'Walking'>(
+		const sm = new StateMachine<
+			'Idle' | 'Walking',
+			Record<string, never>,
+			any
+		>(
 			{
 				Idle: {
 					transitions: ['Walking'],
@@ -34,13 +42,19 @@ describe('state-machine', () => {
 				},
 			},
 			'Idle',
+			{},
 		);
 
-		sm.switch('Walking');
+		// eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+		sm.switch('Walking', undefined as any);
 	});
 
 	test('returns true when checking if can transition to valid state', () => {
-		const sm = new StateMachine<'Idle' | 'Walking'>(
+		const sm = new StateMachine<
+			'Idle' | 'Walking',
+			Record<string, never>,
+			any
+		>(
 			{
 				Idle: {
 					transitions: ['Walking'],
@@ -52,13 +66,18 @@ describe('state-machine', () => {
 				},
 			},
 			'Idle',
+			{},
 		);
 
 		expect(sm.canSwitch('Walking')).toBe(true);
 	});
 
 	test('throws an error when transitioning to an invalid state', () => {
-		const sm = new StateMachine<'Idle' | 'Walking'>(
+		const sm = new StateMachine<
+			'Idle' | 'Walking',
+			Record<string, never>,
+			any
+		>(
 			{
 				Idle: {
 					transitions: [],
@@ -70,13 +89,15 @@ describe('state-machine', () => {
 				},
 			},
 			'Idle',
+			{},
 		);
 
-		expect(() => sm.switch('Walking')).toThrowError();
+		// eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+		expect(() => sm.switch('Walking', undefined as any)).toThrowError();
 	});
 
 	test('can add a timeout when returning a number from onTick', () => {
-		const sm = new StateMachine<'Idle'>(
+		const sm = new StateMachine<'Idle', Record<string, never>, any>(
 			{
 				Idle: {
 					transitions: [],
@@ -86,6 +107,7 @@ describe('state-machine', () => {
 				},
 			},
 			'Idle',
+			{},
 		);
 
 		expect(sm.timeout).toBeNull();
@@ -96,7 +118,7 @@ describe('state-machine', () => {
 	});
 
 	test('onTick decrements timeout when it is not 0', () => {
-		const sm = new StateMachine<'Idle'>(
+		const sm = new StateMachine<'Idle', Record<string, never>, any>(
 			{
 				Idle: {
 					transitions: [],
@@ -106,6 +128,7 @@ describe('state-machine', () => {
 				},
 			},
 			'Idle',
+			{},
 		);
 
 		expect(sm.timeout).toBeNull();
@@ -122,7 +145,11 @@ describe('state-machine', () => {
 	test('can auto transition to next state', () => {
 		type State = 'Idle' | 'Walking';
 
-		const definitions: StateDefinition<State> = {
+		const definitions: StateDefinition<
+			State,
+			Record<string, never>,
+			any
+		> = {
 			Idle: {
 				transitions: ['Walking'],
 				onTick: () => {},
@@ -136,7 +163,11 @@ describe('state-machine', () => {
 			},
 		};
 
-		const sm = new StateMachine(definitions, 'Idle', {});
+		const sm = new StateMachine<State, Record<string, never>, any>(
+			definitions,
+			'Idle',
+			{},
+		);
 		expect(sm.state).toEqual('Idle');
 
 		sm.tick();

@@ -62,4 +62,4 @@ overlay.setPosition(
 	net.runelite.client.ui.overlay.OverlayPosition.ABOVE_CHATBOX_RIGHT,
 );
 
-overlay.setPreferredSize(new java.awt.Dimension(150, 0));
+overlay.setPreferredSize(new java.awt.Dimension(250, 0));

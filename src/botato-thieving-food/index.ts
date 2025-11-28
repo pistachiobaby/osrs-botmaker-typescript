@@ -1,28 +1,11 @@
 /// <reference types="@deafwave/osrs-botmaker-types" />
 
-import { StateMachine } from '../state-machine.js';
-import { BehaviourStateDefinions } from './behaviours/index.js';
 import { overlay, overlayManager } from './overlay.js';
+import cookingMachine from './behaviours/cooking/index.js';
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-/**
- * Available bindings:
- *
- * bot
- * client
- * net
- *
- */
-
-const sm = new StateMachine(
-	,
-	'Cooking.FindCookingSource',
-);
-
 export function onStart(): void {
-	bot.printLogMessage(`Starting bot - CurrentState: ${sm.state}`);
-
 	overlayManager.add(overlay);
 }
 
@@ -33,7 +16,8 @@ export function onEnd(): void {
 
 export function onGameTick(): void {
 	//bot.printGameMessage('Executed JS onGameTick Method');
-	sm.tick();
+	cookingMachine.tick();
+	// sm.tick();
 }
 
 export function onNpcAnimationChanged(npc: net.runelite.api.Actor): void {

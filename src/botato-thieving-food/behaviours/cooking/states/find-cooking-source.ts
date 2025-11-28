@@ -1,4 +1,4 @@
-import { CookingState, createCookingState } from '../index.js';
+import { CookingState, createCookingState } from '../cooking-states.js';
 
 export default createCookingState(CookingState.FindCookingSource)
 	.transitions(CookingState.WalkToCookingSource)

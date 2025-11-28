@@ -3,11 +3,6 @@
  * A lightweight, strongly-typed finite state machine.
  */
 
-import {
-	setCurrentOverlayStateText,
-	setOverlayNextStateText,
-} from './botato-thieving-food/overlay.js';
-
 export type State = string;
 export type OnTickReturn = void | number;
 
@@ -137,7 +132,13 @@ export class StateMachine<
 	}
 
 	canSwitch(to: S): boolean {
-		return this.states[this.current].transitions.includes(to);
+		const cfg = this.states[this.current] as StateConfig<
+			S,
+			readonly S[],
+			Ctx,
+			any
+		>;
+		return cfg.transitions.includes(to);
 	}
 
 	/**
@@ -149,7 +150,12 @@ export class StateMachine<
 		to: K,
 		payload: M[K] extends StateConfig<any, any, any, infer P> ? P : never,
 	) {
-		const fromCfg = this.states[this.current];
+		const fromCfg = this.states[this.current] as StateConfig<
+			S,
+			readonly S[],
+			Ctx,
+			any
+		>;
 
 		if (!fromCfg.transitions.includes(to)) {
 			throw new Error(`Invalid transition: ${this.current} → ${to}`);
@@ -185,14 +191,41 @@ export class StateMachine<
 		if (Array.isArray(result)) {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const [to, payload] = result;
-			this.switch(to, payload);
+			this.switch(
+				to,
+				payload as M[typeof to] extends StateConfig<
+					any,
+					any,
+					any,
+					infer P
+				>
+					? P
+					: never,
+			);
 			return;
 		}
 
 		// Optionally check transitions if user wants
-		const next = cfg.onCheckTransition?.(this.context);
-		if (next && cfg.transitions.includes(next)) {
-			this.switch(next, undefined as any);
+		const next = cfg.onCheckTransition?.(this.context) as
+			| S
+			| null
+			| undefined;
+		if (
+			next &&
+			Array.isArray(cfg.transitions) &&
+			(cfg.transitions as readonly string[]).includes(next)
+		) {
+			this.switch(
+				next,
+				undefined as M[typeof next] extends StateConfig<
+					any,
+					any,
+					any,
+					infer P
+				>
+					? P
+					: never,
+			);
 		}
 	}
 }
@@ -220,7 +253,7 @@ class StateBuilder<
 		private onEnterFn?: (ctx: C, payload: P) => void,
 		private onExitFn?: (ctx: C) => void,
 		private onTickFn?: (ctx: C) => any,
-		private onCheckFn?: any,
+		private onCheckFn?: ((ctx: C) => any) | undefined,
 	) {}
 
 	// Optional payload
@@ -297,7 +330,9 @@ class StateBuilder<
 	build() {
 		return {
 			name: this.name,
-			transitions: this._transitions.to,
+			transitions: this._transitions.to as T extends { to: infer To }
+				? To
+				: never,
 			onEnter: this.onEnterFn,
 			onExit: this.onExitFn,
 			onTick: this.onTickFn!,
