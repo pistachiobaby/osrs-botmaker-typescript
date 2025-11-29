@@ -1,4 +1,4 @@
-import { defineStates, StateMachine } from '../../../state-machine.js';
+import { StateMachine } from '../../../state-machine.js';
 import cookAtSource from './states/cook-at-source.js';
 import findCookingSource from './states/find-cooking-source.js';
 import walkToCookingSource from './states/walk-to-cooking-source.js';
@@ -11,14 +11,11 @@ export {
 	createCookingState,
 } from './cooking-states.js';
 
-export default new StateMachine(
-	defineStates({
+export default StateMachine.create(
+	{
 		[CookingState.FindCookingSource]: findCookingSource,
 		[CookingState.WalkToCookingSource]: walkToCookingSource,
 		[CookingState.CookAtSource]: cookAtSource,
-	}),
-	CookingState.FindCookingSource,
-	{
-		lastInteractionTick: 0,
 	},
+	CookingState.FindCookingSource,
 );

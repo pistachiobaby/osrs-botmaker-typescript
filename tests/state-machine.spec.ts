@@ -1,5 +1,9 @@
 import { expect, test, describe } from 'vitest';
-import { StateDefinition, StateMachine } from '../src/state-machine.js';
+import {
+	defineStates,
+	StateDefinition,
+	StateMachine,
+} from '../src/state-machine.js';
 
 describe('state-machine', () => {
 	test('can instantiate a state machine', () => {
@@ -173,5 +177,33 @@ describe('state-machine', () => {
 		sm.tick();
 
 		expect(sm.state).toEqual('Walking');
+	});
+
+	test('context is brought along through transitions', () => {
+		interface ContextType {
+			foo?: string;
+		}
+
+		const definitions = defineStates({
+			Idle: {
+				transitions: ['Walking'],
+				onTick: (ctx: ContextType) => {
+					ctx.foo = 'bar';
+					return ['Walking'];
+				},
+			},
+			Walking: {
+				transitions: [],
+				onTick: () => {},
+			},
+		});
+
+		const sm = StateMachine.create(definitions, 'Idle');
+		expect(sm.ctx.foo).toBeUndefined();
+
+		sm.tick();
+
+		expect(sm.state).toEqual('Walking');
+		expect(sm.ctx.foo).toEqual('bar');
 	});
 });

@@ -8,13 +8,23 @@ const LineComponent = net.runelite.client.ui.overlay.components.LineComponent;
 
 let overlayNextStateText: string = '';
 let overlayCurrentStateText: string = '';
+let overlayTimeoutText: string = '';
+let overlayStatusText: string = '';
 
-export function setCurrentOverlayStateText(text: string) {
+export function setOverlayCurrentStateText(text: string) {
 	overlayCurrentStateText = text;
 }
 
 export function setOverlayNextStateText(text: string) {
 	overlayNextStateText = text;
+}
+
+export function setOverlayTimeoutText(text: string) {
+	overlayTimeoutText = text;
+}
+
+export function setOverlayStatusText(text: string) {
+	overlayStatusText = text;
 }
 
 export const overlay = new JavaAdapter(
@@ -50,6 +60,24 @@ export const overlay = new JavaAdapter(
 					LineComponent.builder()
 						.left('Transitions:')
 						.right(overlayNextStateText)
+						.build(),
+				);
+
+			this.panelComponent
+				.getChildren()
+				.add(
+					LineComponent.builder()
+						.left('Timeout:')
+						.right(overlayTimeoutText)
+						.build(),
+				);
+
+			this.panelComponent
+				.getChildren()
+				.add(
+					LineComponent.builder()
+						.left('Status:')
+						.right(overlayStatusText)
 						.build(),
 				);
 

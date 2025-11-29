@@ -1,6 +1,11 @@
 /// <reference types="@deafwave/osrs-botmaker-types" />
 
-import { overlay, overlayManager } from './overlay.js';
+import {
+	overlay,
+	overlayManager,
+	setOverlayCurrentStateText,
+	setOverlayTimeoutText,
+} from './overlay.js';
 import cookingMachine from './behaviours/cooking/index.js';
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -16,6 +21,9 @@ export function onEnd(): void {
 
 export function onGameTick(): void {
 	//bot.printGameMessage('Executed JS onGameTick Method');
+	setOverlayCurrentStateText(cookingMachine.state);
+	setOverlayTimeoutText(cookingMachine.timeout?.toString() ?? 'N/A');
+
 	cookingMachine.tick();
 	// sm.tick();
 }
