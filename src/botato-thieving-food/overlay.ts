@@ -6,7 +6,7 @@ export const overlayManager =
 const TitleComponent = net.runelite.client.ui.overlay.components.TitleComponent;
 const LineComponent = net.runelite.client.ui.overlay.components.LineComponent;
 
-let overlayNextStateText: string = '';
+let overlayTickStateText: string = '';
 let overlayCurrentStateText: string = '';
 let overlayTimeoutText: string = '';
 let overlayStatusText: string = '';
@@ -15,8 +15,8 @@ export function setOverlayCurrentStateText(text: string) {
 	overlayCurrentStateText = text;
 }
 
-export function setOverlayNextStateText(text: string) {
-	overlayNextStateText = text;
+export function setOverlayTickText(text: string) {
+	overlayTickStateText = text;
 }
 
 export function setOverlayTimeoutText(text: string) {
@@ -58,8 +58,8 @@ export const overlay = new JavaAdapter(
 				.getChildren()
 				.add(
 					LineComponent.builder()
-						.left('Transitions:')
-						.right(overlayNextStateText)
+						.left('Tick:')
+						.right(overlayTickStateText)
 						.build(),
 				);
 

@@ -8,19 +8,25 @@
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
 		"importHelpers": true,
-		"lib": ["ESNext"],
+		"lib": [
+			"ES6",
+			"ES2015.Collection",
+			"ES2017.Object",
+			"ES2016.Array.Include"
+		],
+		"target": "es6",
+		"module": "ES6",
 		"skipLibCheck": true,
 		"skipDefaultLibCheck": true,
 		"baseUrl": ".",
 		"checkJs": false,
 		"allowJs": true,
 		"resolveJsonModule": true,
-		"target": "ESNext",
-		"module": "NodeNext",
-		"moduleResolution": "NodeNext",
+		"moduleResolution": "Node",
 		"outDir": "./dist",
 		"types": [],
-		"plugins": []
+		"plugins": [],
+		"typeRoots": ["./rhino.d.ts"]
 	},
 	"include": ["src/**/*.ts", "tests/**/*.ts"],
 	"exclude": ["node_modules", "tmp"]

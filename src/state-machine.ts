@@ -1,3 +1,4 @@
+/* eslint-disable no-mixed-spaces-and-tabs */
 /* eslint-disable unicorn/prevent-abbreviations */
 /**
  * A lightweight, strongly-typed finite state machine.
@@ -44,7 +45,7 @@ type AllowedTickReturn<
 	C,
 	ThisSC extends StateConfig<ThisState, readonly any[], C, any>,
 	T extends readonly ThisState[] = ThisSC['transitions'],
-> = void | number | { [K in T[number]]: TransitionTuple<K> }[T[number]];
+> = void | number | [] | { [K in T[number]]: TransitionTuple<K> }[T[number]];
 
 /** Full state definition */
 export type StateDefinition<
@@ -123,6 +124,7 @@ export class StateMachine<
 		initial: keyof M & string,
 		options?: {
 			context?: Partial<InferContextFromStates<M>>;
+			onCheckTransitionAfterTick?: boolean;
 			onEnter?: (ctx: InferContextFromStates<M>) => void;
 			onExit?: (ctx: InferContextFromStates<M>) => void;
 			onStart?: (ctx: InferContextFromStates<M>) => void;
@@ -151,7 +153,7 @@ export class StateMachine<
 	constructor(
 		states: M,
 		initial: S,
-		options?: {
+		private options?: {
 			/**
 			 * Partial context used as overrides for the machine's context. Only
 			 * specified properties will override defaults; unspecified properties
@@ -160,6 +162,7 @@ export class StateMachine<
 			 * object when constructing the machine.
 			 */
 			context?: Partial<Ctx>;
+			onCheckTransitionAfterTick?: boolean;
 			onEnter?: (ctx: Ctx) => void;
 			onExit?: (ctx: Ctx) => void;
 			onStart?: (ctx: Ctx) => void;
@@ -235,7 +238,7 @@ export class StateMachine<
 		this.globalOnEnter?.(this.context);
 	}
 
-	tick() {
+	tick(): void | [] {
 		const cfg = this.states[this.current];
 		this.globalOnTick?.(this.context, cfg);
 
@@ -247,36 +250,63 @@ export class StateMachine<
 			this.timeoutCounter = null;
 		}
 
-		bot.printLogMessage(
-			`StateMachine Tick: Current State = ${this.current}`,
-		);
-		const result = cfg.onTick(this.context);
+		// TODO: onCheckTransition could tick right after transitioning, that way we're not wasting ticks.
+		if (!this.options?.onCheckTransitionAfterTick) {
+			const next = cfg.onCheckTransition?.(this.context) as void | [S];
 
-		// Handle numeric timeout
-		if (typeof result === 'number') {
-			this.timeoutCounter = result;
-			return;
+			if (
+				next &&
+				Array.isArray(next) &&
+				Array.isArray(cfg.transitions) &&
+				(cfg.transitions as string[]).includes(next[0])
+			) {
+				this.switch(next[0]);
+				return;
+			}
 		}
 
-		// Handle transition tuple: [nextState, payload]
-		if (Array.isArray(result)) {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-			const [to] = result;
-			this.switch(to);
-			return;
+		try {
+			const result = cfg.onTick(this.context);
+
+			// Handle numeric timeout
+			if (typeof result === 'number') {
+				this.timeoutCounter = result;
+				return;
+			}
+
+			// Handle transition tuple: [nextState]
+			if (Array.isArray(result)) {
+				if (result.length > 0) {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+					const [to] = result;
+					this.switch(to);
+				} else {
+					return []; // empty array signals machine completion
+				}
+
+				return;
+			}
+		} catch (error) {
+			if (error instanceof Error) {
+				bot.printGameMessage(`StateMachine Error in ${this.current}`);
+				bot.printLogMessage(`${error.message} : ${error.stack}`);
+			}
+
+			bot.terminate();
 		}
 
-		// Optionally check transitions if user wants
-		const next = cfg.onCheckTransition?.(this.context) as
-			| S
-			| null
-			| undefined;
-		if (
-			next &&
-			Array.isArray(cfg.transitions) &&
-			(cfg.transitions as readonly string[]).includes(next)
-		) {
-			this.switch(next);
+		if (this.options?.onCheckTransitionAfterTick) {
+			const next = cfg.onCheckTransition?.(this.context) as void | [S];
+
+			if (
+				next &&
+				Array.isArray(next) &&
+				Array.isArray(cfg.transitions) &&
+				(cfg.transitions as string[]).includes(next[0])
+			) {
+				this.switch(next[0]);
+				return;
+			}
 		}
 	}
 }
@@ -369,7 +399,18 @@ class StateBuilder<
 
 	onCheckTransition(
 		this: StateBuilder<S, Name, C, SomeTransitions<any>>,
-		fn: (ctx: C) => T['to'][number] | null | undefined,
+		fn: (
+			ctx: C,
+		) => void | AllowedTickReturn<
+			Name,
+			C,
+			StateConfig<
+				Name,
+				T extends { to: infer To } ? To : readonly [],
+				C,
+				any
+			>
+		>,
 	) {
 		return new StateBuilder<S, Name, C, SomeTransitions<T['to']>>(
 			this.name,

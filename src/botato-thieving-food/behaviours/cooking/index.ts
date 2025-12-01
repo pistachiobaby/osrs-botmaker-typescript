@@ -11,11 +11,12 @@ export {
 	createCookingState,
 } from './cooking-states.js';
 
-export default StateMachine.create(
-	{
-		[CookingState.FindCookingSource]: findCookingSource,
-		[CookingState.WalkToCookingSource]: walkToCookingSource,
-		[CookingState.CookAtSource]: cookAtSource,
-	},
-	CookingState.FindCookingSource,
-);
+export default () =>
+	StateMachine.create(
+		{
+			[CookingState.FindCookingSource]: findCookingSource,
+			[CookingState.WalkToCookingSource]: walkToCookingSource,
+			[CookingState.CookAtSource]: cookAtSource,
+		},
+		CookingState.FindCookingSource,
+	);

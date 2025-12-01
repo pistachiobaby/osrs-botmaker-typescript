@@ -1,117 +1,98 @@
 import { expect, test, describe } from 'vitest';
 import {
 	defineStates,
+	makeStateBuilder,
 	StateDefinition,
 	StateMachine,
 } from '../src/state-machine.js';
 
 describe('state-machine', () => {
 	test('can instantiate a state machine', () => {
-		const sm = new StateMachine<
-			'Idle' | 'Walking',
-			Record<string, never>,
-			any
-		>(
+		const builder = makeStateBuilder<'Idle' | 'Walk', object>();
+
+		const sm = StateMachine.create(
 			{
-				Idle: {
-					transitions: [],
-					onTick: () => {},
-				},
-				Walking: {
-					transitions: [],
-					onTick: () => {},
-				},
+				Idle: builder('Idle')
+					.onTick(() => {})
+					.build(),
 			},
 			'Idle',
-			{},
 		);
 
 		expect(sm).toBeDefined();
 	});
 
 	test('can transition to another state', () => {
-		const sm = new StateMachine<
-			'Idle' | 'Walking',
-			Record<string, never>,
-			any
-		>(
+		const builder = makeStateBuilder<'Idle' | 'Walk', object>();
+
+		const sm = StateMachine.create(
 			{
-				Idle: {
-					transitions: ['Walking'],
-					onTick: () => {},
-				},
-				Walking: {
-					transitions: [],
-					onTick: () => {},
-				},
+				Idle: builder('Idle')
+					.transitions('Walk')
+					.onTick(() => {})
+					.build(),
+				Walk: builder('Walk')
+					.onTick(() => {})
+					.build(),
 			},
 			'Idle',
-			{},
 		);
 
 		// eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
-		sm.switch('Walking', undefined as any);
+		sm.switch('Walk');
 	});
 
 	test('returns true when checking if can transition to valid state', () => {
-		const sm = new StateMachine<
-			'Idle' | 'Walking',
-			Record<string, never>,
-			any
-		>(
+		const builder = makeStateBuilder<'Idle' | 'Walk', object>();
+
+		const sm = StateMachine.create(
 			{
-				Idle: {
-					transitions: ['Walking'],
-					onTick: () => {},
-				},
-				Walking: {
-					transitions: [],
-					onTick: () => {},
-				},
+				Idle: builder('Idle')
+					.transitions('Walk')
+					.onTick(() => {})
+					.build(),
+				Walk: builder('Walk')
+					.onTick(() => {})
+					.build(),
 			},
 			'Idle',
-			{},
 		);
 
-		expect(sm.canSwitch('Walking')).toBe(true);
+		expect(sm.canSwitch('Walk')).toBe(true);
 	});
 
 	test('throws an error when transitioning to an invalid state', () => {
-		const sm = new StateMachine<
-			'Idle' | 'Walking',
-			Record<string, never>,
-			any
-		>(
+		const builder = makeStateBuilder<'Idle' | 'Walk', object>();
+
+		const sm = StateMachine.create(
 			{
-				Idle: {
-					transitions: [],
-					onTick: () => {},
-				},
-				Walking: {
-					transitions: [],
-					onTick: () => {},
-				},
+				Idle: builder('Idle')
+					.onTick(() => {})
+					.build(),
+				Walk: builder('Walk')
+					.onTick(() => {})
+					.build(),
 			},
 			'Idle',
-			{},
 		);
 
 		// eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
-		expect(() => sm.switch('Walking', undefined as any)).toThrowError();
+		expect(() => sm.switch('Walk')).toThrowError();
 	});
 
 	test('can add a timeout when returning a number from onTick', () => {
-		const sm = new StateMachine<'Idle', Record<string, never>, any>(
+		const builder = makeStateBuilder<'Idle' | 'Walk', object>();
+
+		const sm = StateMachine.create(
 			{
-				Idle: {
-					transitions: [],
-					onTick: () => {
-						return 5;
-					},
-				},
+				Idle: builder('Idle')
+					.onTick(() => 5)
+					.build(),
+				Walk: builder('Walk')
+					.onTick(() => {})
+					.build(),
 			},
 			'Idle',
-			{},
 		);
 
 		expect(sm.timeout).toBeNull();
@@ -122,17 +103,18 @@ describe('state-machine', () => {
 	});
 
 	test('onTick decrements timeout when it is not 0', () => {
-		const sm = new StateMachine<'Idle', Record<string, never>, any>(
+		const builder = makeStateBuilder<'Idle' | 'Walk', object>();
+
+		const sm = StateMachine.create(
 			{
-				Idle: {
-					transitions: [],
-					onTick: () => {
-						return 5;
-					},
-				},
+				Idle: builder('Idle')
+					.onTick(() => 5)
+					.build(),
+				Walk: builder('Walk')
+					.onTick(() => {})
+					.build(),
 			},
 			'Idle',
-			{},
 		);
 
 		expect(sm.timeout).toBeNull();
@@ -147,36 +129,27 @@ describe('state-machine', () => {
 	});
 
 	test('can auto transition to next state', () => {
-		type State = 'Idle' | 'Walking';
+		const builder = makeStateBuilder<'Idle' | 'Walk', object>();
 
-		const definitions: StateDefinition<
-			State,
-			Record<string, never>,
-			any
-		> = {
-			Idle: {
-				transitions: ['Walking'],
-				onTick: () => {},
-				onCheckTransition: () => {
-					return 'Walking';
-				},
+		const sm = StateMachine.create(
+			{
+				Idle: builder('Idle')
+					.transitions('Walk')
+					.onCheckTransition(() => ['Walk'])
+					.onTick(() => {})
+					.build(),
+				Walk: builder('Walk')
+					.onTick(() => {})
+					.build(),
 			},
-			Walking: {
-				transitions: [],
-				onTick: () => {},
-			},
-		};
-
-		const sm = new StateMachine<State, Record<string, never>, any>(
-			definitions,
 			'Idle',
-			{},
 		);
+
 		expect(sm.state).toEqual('Idle');
 
 		sm.tick();
 
-		expect(sm.state).toEqual('Walking');
+		expect(sm.state).toEqual('Walk');
 	});
 
 	test('context is brought along through transitions', () => {
@@ -205,5 +178,42 @@ describe('state-machine', () => {
 
 		expect(sm.state).toEqual('Walking');
 		expect(sm.ctx.foo).toEqual('bar');
+	});
+
+	test('state builder works', () => {
+		const TestState = {
+			Idle: 'Idle',
+			Walk: 'Walk',
+		} as const;
+
+		type TestStates = (typeof TestState)[keyof typeof TestState];
+
+		interface Context {
+			foo: string;
+		}
+
+		const builder = makeStateBuilder<TestStates, Context>();
+
+		const IdleState = builder('Idle')
+			.transitions('Walk')
+			.onCheckTransition(() => ['Walk'])
+			.onTick(() => {})
+			.build();
+
+		const WalkState = builder('Walk')
+			.onTick(() => [])
+			.build();
+
+		const machine = StateMachine.create(
+			{
+				[TestState.Idle]: IdleState,
+				[TestState.Walk]: WalkState,
+			},
+			'Idle',
+		);
+
+		expect(machine.state).toEqual(TestState.Idle);
+		machine.tick();
+		expect(machine.state).toEqual(TestState.Walk);
 	});
 });

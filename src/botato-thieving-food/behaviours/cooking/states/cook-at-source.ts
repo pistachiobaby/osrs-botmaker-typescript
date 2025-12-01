@@ -1,8 +1,20 @@
-import { isPlayerBusy } from '../../../../utils.js';
+import {
+	BURNT_FOOD_ITEM_IDS,
+	COOKED_FOOD_ITEM_IDS,
+	filterInventoryIds,
+	isPlayerBusy,
+	RAW_FOOD_ITEM_IDS,
+} from '../../../../utils.js';
+import { setOverlayStatusText } from '../../../overlay.js';
 import { CookingState, createCookingState } from '../cooking-states.js';
 
 export default createCookingState(CookingState.CookAtSource)
 	.transitions(CookingState.FindCookingSource)
+	.onEnter((ctx) => {
+		setOverlayStatusText(
+			`Cooking at Source (${ctx.cookingSourcePoint?.toString()})`,
+		);
+	})
 	.onTick((ctx) => {
 		if (ctx.cookingSourceTileObject === null) {
 			return [CookingState.FindCookingSource];
@@ -12,12 +24,12 @@ export default createCookingState(CookingState.CookAtSource)
 			return;
 		}
 
-		if (!bot.inventory.containsAnyIds([2134])) {
-			if (bot.inventory.containsAnyIds([2146])) {
-				bot.inventory.interactWithIds([2146], ['Drop']);
-			} else if (bot.inventory.containsAnyIds([2142])) {
-				bot.terminate();
-				return; // EXIT MACHINE?
+		// Do we have any raw food to cook?
+		if (!bot.inventory.containsAnyIds(RAW_FOOD_ITEM_IDS)) {
+			if (bot.inventory.containsAnyIds(BURNT_FOOD_ITEM_IDS)) {
+				bot.inventory.interactWithIds(BURNT_FOOD_ITEM_IDS, ['Drop']);
+			} else if (bot.inventory.containsAnyIds(COOKED_FOOD_ITEM_IDS)) {
+				return []; // Exit Machine
 			}
 
 			throw new Error(
@@ -30,7 +42,13 @@ export default createCookingState(CookingState.CookAtSource)
 			return 3;
 		}
 
-		bot.inventory.itemOnObjectWithIds(2134, ctx.cookingSourceTileObject);
-		return 1;
+		const cookablesInInventory = filterInventoryIds(RAW_FOOD_ITEM_IDS);
+
+		bot.inventory.itemOnObjectWithIds(
+			cookablesInInventory[0],
+			ctx.cookingSourceTileObject,
+		);
+
+		return 2;
 	})
 	.build();

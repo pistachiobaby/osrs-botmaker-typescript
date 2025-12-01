@@ -6,26 +6,49 @@ import {
 	setOverlayCurrentStateText,
 	setOverlayTimeoutText,
 } from './overlay.js';
+
+import thievingMachine from './behaviours/thieving/index.js';
 import cookingMachine from './behaviours/cooking/index.js';
+import fightingMachine from './behaviours/fighting/index.js';
+
+import { Orchestrator } from '../orchestrator.js';
+import { StateMachine } from '../state-machine.js';
+import { COOKED_FOOD_ITEM_IDS, RAW_FOOD_ITEM_IDS } from '../utils.js';
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+let orchestrator: Orchestrator<StateMachine<any, any, any>>;
+
 export function onStart(): void {
 	overlayManager.add(overlay);
+	orchestrator = new Orchestrator(() => {
+		const hasCookedFood =
+			bot.inventory.containsAnyIds(COOKED_FOOD_ITEM_IDS);
+		const hasRawFood = bot.inventory.containsAnyIds(RAW_FOOD_ITEM_IDS);
+
+		if (hasCookedFood) {
+			return thievingMachine();
+		} else if (hasRawFood) {
+			return cookingMachine();
+		}
+
+		return fightingMachine(['Giant rat']);
+	});
 }
 
 export function onEnd(): void {
-	//bot.printGameMessage('Executed JS onEnd Method');
+	if (bot.walking.isWebWalking()) {
+		bot.walking.webWalkCancel();
+	}
+
 	overlayManager.remove(overlay);
 }
 
 export function onGameTick(): void {
-	//bot.printGameMessage('Executed JS onGameTick Method');
-	setOverlayCurrentStateText(cookingMachine.state);
-	setOverlayTimeoutText(cookingMachine.timeout?.toString() ?? 'N/A');
-
-	cookingMachine.tick();
-	// sm.tick();
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+	setOverlayCurrentStateText(orchestrator.active?.state ?? 'N/A');
+	setOverlayTimeoutText(orchestrator.active?.timeout?.toString() ?? 'N/A');
+	orchestrator.tick();
 }
 
 export function onNpcAnimationChanged(npc: net.runelite.api.Actor): void {
