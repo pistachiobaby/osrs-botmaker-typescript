@@ -15,6 +15,9 @@ export const FIGHTING_POINTS = [
 	new WorldPoint(2999, 3193, 0), // Rats
 ];
 
+export const FIGHTING_LOOTABLES = ['Bones', 'Raw rat meat'];
+export const FIGHTING_BURYABLES = ['Bones'];
+
 export interface FightingContext {
 	targetNPCNames: string[];
 	targetNPC: net.runelite.api.NPC;

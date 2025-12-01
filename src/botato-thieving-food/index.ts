@@ -26,6 +26,10 @@ export function onStart(): void {
 			bot.inventory.containsAnyIds(COOKED_FOOD_ITEM_IDS);
 		const hasRawFood = bot.inventory.containsAnyIds(RAW_FOOD_ITEM_IDS);
 
+		if (!bot.inventory.isFull()) {
+			return fightingMachine(['Giant rat']);
+		}
+
 		if (hasCookedFood) {
 			return thievingMachine();
 		} else if (hasRawFood) {

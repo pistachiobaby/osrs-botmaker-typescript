@@ -106,3 +106,22 @@ export function shouldInteractWithPouches(
 	bot.inventory.interactWithNames(['Coin pouch'], ['Open-all']);
 	return true;
 }
+
+export function getItemsWithNames(names: string[], maxDistance: number) {
+	const player = client.getLocalPlayer();
+	const playerLocation = player.getWorldLocation();
+
+	const groundItems = bot.tileItems.getItemsWithNames(names);
+	const itemsInDistance = groundItems.filter((groundItem) => {
+		const owned =
+			groundItem.item.getOwnership() ===
+			net.runelite.api.TileItem.OWNERSHIP_SELF;
+		const inDistance =
+			playerLocation.distanceTo(groundItem.tile.getWorldLocation()) <=
+			maxDistance;
+
+		return owned && inDistance;
+	});
+
+	return itemsInDistance;
+}

@@ -23,6 +23,7 @@ export type StateConfig<
 	M extends Record<S, StateConfig<S, readonly S[], C, any>> = any,
 > = {
 	transitions: T;
+	terminal?: boolean;
 
 	// Payload type marker (not used at runtime)
 	payload?: (payload: P) => void;
@@ -252,16 +253,23 @@ export class StateMachine<
 
 		// TODO: onCheckTransition could tick right after transitioning, that way we're not wasting ticks.
 		if (!this.options?.onCheckTransitionAfterTick) {
-			const next = cfg.onCheckTransition?.(this.context) as void | [S];
+			const next = cfg.onCheckTransition?.(this.context) as
+				| void
+				| [S]
+				| [];
 
-			if (
-				next &&
-				Array.isArray(next) &&
-				Array.isArray(cfg.transitions) &&
-				(cfg.transitions as string[]).includes(next[0])
-			) {
-				this.switch(next[0]);
-				return;
+			if (next && Array.isArray(next)) {
+				if (next.length === 0) {
+					return [];
+				}
+
+				if (
+					Array.isArray(cfg.transitions) &&
+					(cfg.transitions as string[]).includes(next[0])
+				) {
+					this.switch(next[0]);
+					return;
+				}
 			}
 		}
 
@@ -334,7 +342,20 @@ class StateBuilder<
 		private onExitFn?: (ctx: C) => void,
 		private onTickFn?: (ctx: C) => any,
 		private onCheckFn?: ((ctx: C) => any) | undefined,
+		private _terminal?: boolean,
 	) {}
+
+	terminal(terminal = true) {
+		return new StateBuilder<S, Name, C, T>(
+			this.name,
+			this._transitions,
+			this.onEnterFn,
+			this.onExitFn,
+			this.onTickFn,
+			this.onCheckFn,
+			terminal,
+		);
+	}
 
 	// Optional transitions
 	transitions<const To extends readonly S[]>(...targets: To) {
@@ -432,6 +453,7 @@ class StateBuilder<
 			onExit: this.onExitFn,
 			onTick: this.onTickFn!,
 			onCheckTransition: this.onCheckFn,
+			terminal: this._terminal,
 		};
 	}
 }

@@ -2,13 +2,31 @@ import { setOverlayStatusText } from '../../../overlay.js';
 import {
 	createFightingState,
 	DYING_ANIMATION,
+	FIGHTING_LOOTABLES,
 	FightingState,
 } from '../fighting-states.js';
 
 export default createFightingState(FightingState.ScanNPCs)
-	.transitions(FightingState.Attack)
+	.transitions(FightingState.Attack, FightingState.Loot)
 	.onEnter((ctx) => {
 		setOverlayStatusText(`Scanning for ${ctx.targetNPCNames.join(',')}...`);
+	})
+	.onCheckTransition(() => {
+		if (bot.inventory.isFull()) {
+			bot.printLogMessage('Bot inventory is full exiting machine');
+			return [];
+		}
+
+		const groundItems = bot.tileItems.getItemsWithNames(FIGHTING_LOOTABLES);
+		if (
+			groundItems.some(
+				(groundItem) =>
+					groundItem.item.getOwnership() ===
+					net.runelite.api.TileItem.OWNERSHIP_SELF,
+			)
+		) {
+			return [FightingState.Loot];
+		}
 	})
 	.onTick((ctx) => {
 		const npcs = bot.npcs
