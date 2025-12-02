@@ -1,8 +1,4 @@
-import {
-	getItemsWithNames,
-	isPlayerBusy,
-	shouldEatFood,
-} from '../../../../utils.js';
+import { getItemsWithNames, isPlayerBusy } from '../../../../utils.js';
 import { setOverlayStatusText } from '../../../overlay.js';
 import {
 	createFightingState,

@@ -12,6 +12,7 @@ export default createFightingState(FightingState.Loot)
 	.onTick((ctx) => {
 		if (bot.inventory.containsAnyNames(FIGHTING_BURYABLES)) {
 			bot.inventory.interactWithNames(FIGHTING_BURYABLES, ['Bury']);
+			return;
 		}
 
 		if (

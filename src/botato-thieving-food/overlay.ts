@@ -10,6 +10,7 @@ let overlayTickStateText: string = '';
 let overlayCurrentStateText: string = '';
 let overlayTimeoutText: string = '';
 let overlayStatusText: string = '';
+let overlayHealthThreshold: string = '';
 
 export function setOverlayCurrentStateText(text: string) {
 	overlayCurrentStateText = text;
@@ -25,6 +26,10 @@ export function setOverlayTimeoutText(text: string) {
 
 export function setOverlayStatusText(text: string) {
 	overlayStatusText = text;
+}
+
+export function setOverlayHealthThreshold(text: string) {
+	overlayHealthThreshold = text;
 }
 
 export const overlay = new JavaAdapter(
@@ -69,6 +74,15 @@ export const overlay = new JavaAdapter(
 					LineComponent.builder()
 						.left('Timeout:')
 						.right(overlayTimeoutText)
+						.build(),
+				);
+
+			this.panelComponent
+				.getChildren()
+				.add(
+					LineComponent.builder()
+						.left('Health Threshold:')
+						.right(overlayHealthThreshold)
 						.build(),
 				);
 

@@ -2,6 +2,7 @@ import {
 	BURNT_FOOD_ITEM_IDS,
 	COOKED_FOOD_ITEM_IDS,
 	filterInventoryIds,
+	getRandomInt,
 	isPlayerBusy,
 	RAW_FOOD_ITEM_IDS,
 } from '../../../../utils.js';
@@ -49,6 +50,6 @@ export default createCookingState(CookingState.CookAtSource)
 			ctx.cookingSourceTileObject,
 		);
 
-		return 2;
+		return getRandomInt(1, 3);
 	})
 	.build();

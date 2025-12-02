@@ -10,10 +10,12 @@ import {
 import thievingMachine from './behaviours/thieving/index.js';
 import cookingMachine from './behaviours/cooking/index.js';
 import fightingMachine from './behaviours/fighting/index.js';
+import magicTrainingMachine from './behaviours/magic-training/index.js';
 
 import { Orchestrator } from '../orchestrator.js';
 import { StateMachine } from '../state-machine.js';
 import { COOKED_FOOD_ITEM_IDS, RAW_FOOD_ITEM_IDS } from '../utils.js';
+import magicTraining from './behaviours/magic-training/index.js';
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
@@ -22,21 +24,17 @@ let orchestrator: Orchestrator<StateMachine<any, any, any>>;
 export function onStart(): void {
 	overlayManager.add(overlay);
 	orchestrator = new Orchestrator(() => {
-		const hasCookedFood =
-			bot.inventory.containsAnyIds(COOKED_FOOD_ITEM_IDS);
-		const hasRawFood = bot.inventory.containsAnyIds(RAW_FOOD_ITEM_IDS);
+		// const hasCookedFood =
+		// 	bot.inventory.containsAnyIds(COOKED_FOOD_ITEM_IDS);
+		// const hasRawFood = bot.inventory.containsAnyIds(RAW_FOOD_ITEM_IDS);
 
-		if (!bot.inventory.isFull()) {
-			return fightingMachine(['Giant rat']);
-		}
+		// if (hasCookedFood) {
+		// 	return thievingMachine();
+		// } else if (hasRawFood) {
+		// 	return cookingMachine();
+		// }
 
-		if (hasCookedFood) {
-			return thievingMachine();
-		} else if (hasRawFood) {
-			return cookingMachine();
-		}
-
-		return fightingMachine(['Giant rat']);
+		return magicTrainingMachine();
 	});
 }
 

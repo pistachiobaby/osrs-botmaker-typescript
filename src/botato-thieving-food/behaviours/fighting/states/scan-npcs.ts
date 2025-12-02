@@ -1,3 +1,4 @@
+import { getRandomInt } from '../../../../utils.js';
 import { setOverlayStatusText } from '../../../overlay.js';
 import {
 	createFightingState,
@@ -35,7 +36,7 @@ export default createFightingState(FightingState.ScanNPCs)
 
 		if (npcs.length === 0) {
 			setOverlayStatusText('No valid NPC(s), waiting...');
-			return 2;
+			return getRandomInt(1, 4);
 		}
 
 		const closest = bot.npcs.getClosest(npcs);

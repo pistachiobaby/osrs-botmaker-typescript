@@ -1,3 +1,5 @@
+import { setOverlayHealthThreshold } from './botato-thieving-food/overlay.js';
+
 export const RAW_FOOD_ITEM_IDS = [
 	2134, // Raw meat
 ];
@@ -73,6 +75,9 @@ export function getRandomInt(min: number, max: number): number {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+let nextHealthThreshold = getRandomInt(4, 15);
+setOverlayHealthThreshold(nextHealthThreshold.toString());
+
 export function shouldEatFood(): boolean {
 	const foodQuantity =
 		bot.inventory.getQuantityOfAllIds(COOKED_FOOD_ITEM_IDS);
@@ -85,7 +90,9 @@ export function shouldEatFood(): boolean {
 		net.runelite.api.Skill.HITPOINTS,
 	);
 
-	if (playerHealth < getRandomInt(5, 9)) {
+	if (playerHealth <= nextHealthThreshold) {
+		nextHealthThreshold = getRandomInt(4, 15);
+		setOverlayHealthThreshold(nextHealthThreshold.toString());
 		bot.inventory.interactWithIds(COOKED_FOOD_ITEM_IDS, ['Eat']);
 		return true;
 	}
@@ -124,4 +131,30 @@ export function getItemsWithNames(names: string[], maxDistance: number) {
 	});
 
 	return itemsInDistance;
+}
+
+export function handleWalkingToPoint(
+	destinationPoint: net.runelite.api.coords.WorldPoint,
+	minDistanceToStop: number,
+	onReached: () => void,
+) {
+	if (isPlayerBusy()) {
+		return;
+	}
+
+	const player = client.getLocalPlayer();
+	const distanceToSource = player
+		.getWorldLocation()
+		.distanceTo(destinationPoint);
+
+	if (distanceToSource <= minDistanceToStop) {
+		bot.walking.webWalkCancel();
+		return onReached();
+	} else {
+		if (!bot.walking.isWebWalking()) {
+			bot.walking.webWalkStart(destinationPoint);
+		}
+	}
+
+	return;
 }

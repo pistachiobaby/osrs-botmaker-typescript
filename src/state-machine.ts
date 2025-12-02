@@ -115,6 +115,7 @@ export class StateMachine<
 	private globalOnTick:
 		| ((ctx: Ctx, cfg: StateConfig<S, readonly S[], Ctx, any>) => void)
 		| undefined;
+	private tickedOnSwitch: boolean = false;
 
 	/**
 	 * Factory method: creates a StateMachine with Ctx inferred from states object.
@@ -217,7 +218,7 @@ export class StateMachine<
 	 * - Ensures `to` is valid from this state
 	 * - Ensures payload matches the target state's expected payload type
 	 */
-	switch<K extends S>(to: K) {
+	switch<K extends S>(to: K, tickOnSwitch = false) {
 		const fromCfg = this.states[this.current] as StateConfig<
 			S,
 			readonly S[],
@@ -237,6 +238,10 @@ export class StateMachine<
 
 		nextCfg.onEnter?.(this.context);
 		this.globalOnEnter?.(this.context);
+
+		if (tickOnSwitch) {
+			this.tick();
+		}
 	}
 
 	tick(): void | [] {
@@ -251,29 +256,29 @@ export class StateMachine<
 			this.timeoutCounter = null;
 		}
 
-		// TODO: onCheckTransition could tick right after transitioning, that way we're not wasting ticks.
-		if (!this.options?.onCheckTransitionAfterTick) {
-			const next = cfg.onCheckTransition?.(this.context) as
-				| void
-				| [S]
-				| [];
+		try {
+			// TODO: onCheckTransition could tick right after transitioning, that way we're not wasting ticks.
+			if (!this.options?.onCheckTransitionAfterTick) {
+				const next = cfg.onCheckTransition?.(this.context) as
+					| void
+					| [S]
+					| [];
 
-			if (next && Array.isArray(next)) {
-				if (next.length === 0) {
-					return [];
-				}
+				if (next && Array.isArray(next)) {
+					if (next.length === 0) {
+						return [];
+					}
 
-				if (
-					Array.isArray(cfg.transitions) &&
-					(cfg.transitions as string[]).includes(next[0])
-				) {
-					this.switch(next[0]);
-					return;
+					if (
+						Array.isArray(cfg.transitions) &&
+						(cfg.transitions as string[]).includes(next[0])
+					) {
+						this.switch(next[0], true);
+						return;
+					}
 				}
 			}
-		}
 
-		try {
 			const result = cfg.onTick(this.context);
 
 			// Handle numeric timeout

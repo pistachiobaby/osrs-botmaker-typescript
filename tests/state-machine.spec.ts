@@ -216,4 +216,56 @@ describe('state-machine', () => {
 		machine.tick();
 		expect(machine.state).toEqual(TestState.Walk);
 	});
+
+	test('OnCheckTransition that happens before a tick should switch and run a tick', () => {
+		const TestState = {
+			Idle: 'Idle',
+			Walk: 'Walk',
+		} as const;
+
+		type TestStates = (typeof TestState)[keyof typeof TestState];
+
+		interface Context {
+			foo: string;
+		}
+
+		const builder = makeStateBuilder<TestStates, Context>();
+
+		let tickCount = 0;
+		const IdleState = builder('Idle')
+			.transitions('Walk')
+			.onCheckTransition(() => ['Walk'])
+			.onTick(() => {
+				tickCount++;
+			})
+			.build();
+
+		const WalkState = builder('Walk')
+			.onTick(() => {
+				tickCount++;
+			})
+			.build();
+
+		const machine = StateMachine.create(
+			{
+				[TestState.Idle]: IdleState,
+				[TestState.Walk]: WalkState,
+			},
+			'Idle',
+		);
+
+		expect(tickCount).toBe(0);
+
+		expect(machine.state).toEqual(TestState.Idle);
+
+		machine.tick();
+
+		expect(tickCount).toBe(1);
+
+		expect(machine.state).toEqual(TestState.Walk);
+
+		machine.tick();
+
+		expect(tickCount).toBe(2);
+	});
 });
