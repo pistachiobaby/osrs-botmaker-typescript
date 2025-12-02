@@ -5,6 +5,10 @@ export const MagicState = {
 	WalkToLocation: 'MagicTraining.WalkToLocation',
 	ScanNpcs: 'MagicTraining.ScanNPCs',
 	Train: 'MagicTraining.Train',
+	SelectSpell: 'MagicTraining.SelectSpell',
+	CastSpell: 'MagicTraining.CastSpell',
+	CloseMenu: 'MagicTraining.CloseMenu',
+	BreakCheck: 'MagicTraining.BreakCheck',
 } as const;
 
 type MagicStates = (typeof MagicState)[keyof typeof MagicState];

@@ -268,4 +268,129 @@ describe('state-machine', () => {
 
 		expect(tickCount).toBe(2);
 	});
+
+	test('OnCheckTransition can return a transition with a timeout', () => {
+		const TestState = {
+			Idle: 'Idle',
+			Walk: 'Walk',
+		} as const;
+
+		type TestStates = (typeof TestState)[keyof typeof TestState];
+
+		interface Context {
+			foo: string;
+		}
+
+		const builder = makeStateBuilder<TestStates, Context>();
+
+		let idleTickCount = 0;
+		let walkTickCount = 0;
+		const IdleState = builder('Idle')
+			.transitions('Walk')
+			.onCheckTransition(() => ['Walk', 1]) // return a timeout
+			.onTick(() => {
+				idleTickCount++;
+			})
+			.build();
+
+		const WalkState = builder('Walk')
+			.onTick(() => {
+				walkTickCount++;
+			})
+			.build();
+
+		const machine = StateMachine.create(
+			{
+				[TestState.Idle]: IdleState,
+				[TestState.Walk]: WalkState,
+			},
+			'Idle',
+		);
+
+		expect(idleTickCount).toBe(0);
+		expect(walkTickCount).toBe(0);
+		expect(machine.timeout).toBe(null);
+		expect(machine.state).toBe(TestState.Idle);
+
+		machine.tick();
+
+		expect(idleTickCount).toBe(0);
+		expect(walkTickCount).toBe(0);
+		expect(machine.state).toBe(TestState.Walk);
+		expect(machine.timeout).toBe(0); // We'll have ticked the timeout down, but the tick shouldn't of ran.
+
+		machine.tick();
+
+		expect(idleTickCount).toBe(0);
+		expect(walkTickCount).toBe(1);
+		expect(machine.state).toBe(TestState.Walk);
+		expect(machine.timeout).toBe(null);
+
+		machine.tick();
+
+		expect(idleTickCount).toBe(0);
+		expect(walkTickCount).toBe(2);
+		expect(machine.state).toBe(TestState.Walk);
+		expect(machine.timeout).toBe(null);
+	});
+
+	test('OnTick can return a transition with a timeout', () => {
+		const TestState = {
+			Idle: 'Idle',
+			Walk: 'Walk',
+		} as const;
+
+		type TestStates = (typeof TestState)[keyof typeof TestState];
+
+		interface Context {
+			foo: string;
+		}
+
+		const builder = makeStateBuilder<TestStates, Context>();
+
+		let walkTickCount = 0;
+		const IdleState = builder('Idle')
+			.transitions('Walk')
+			.onTick(() => {
+				return ['Walk', 1];
+			})
+			.build();
+
+		const WalkState = builder('Walk')
+			.onTick(() => {
+				walkTickCount++;
+			})
+			.build();
+
+		const machine = StateMachine.create(
+			{
+				[TestState.Idle]: IdleState,
+				[TestState.Walk]: WalkState,
+			},
+			'Idle',
+		);
+
+		expect(walkTickCount).toBe(0);
+		expect(machine.state).toBe(TestState.Idle);
+		expect(machine.timeout).toBe(null);
+
+		// Start
+		machine.tick();
+
+		expect(walkTickCount).toBe(0);
+		expect(machine.state).toBe(TestState.Walk);
+		expect(machine.timeout).toBe(1);
+
+		machine.tick();
+
+		expect(walkTickCount).toBe(0);
+		expect(machine.state).toBe(TestState.Walk);
+		expect(machine.timeout).toBe(0);
+
+		machine.tick();
+
+		expect(walkTickCount).toBe(1);
+		expect(machine.state).toBe(TestState.Walk);
+		expect(machine.timeout).toBe(null);
+	});
 });

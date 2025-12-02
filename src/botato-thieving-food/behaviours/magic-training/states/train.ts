@@ -1,4 +1,4 @@
-import { isPlayerBusy } from '../../../../utils.js';
+import { getRandomInt, isPlayerBusy } from '../../../../utils.js';
 import { setOverlayStatusText } from '../../../overlay.js';
 import {
 	createMagicTrainingState,
@@ -19,44 +19,6 @@ export default createMagicTrainingState(MagicState.Train)
 			return;
 		}
 
-		if (client.getWidget(10747962)?.isHidden()) {
-			setOverlayStatusText('Magic Widget is NOT open...');
-		} else {
-			setOverlayStatusText('Magic Widget is open...');
-		}
-
-		// bot.menuAction(
-		// 	-1,
-		// 	14287043,
-		// 	net.runelite.api.MenuAction.WIDGET_TARGET,
-		// 	0,
-		// 	-1,
-		// 	'Cast',
-		// 	'<col=00ff00>Monster Inspect</col>',
-		// );
-
-		// bot.menuAction(
-		// 	0,
-		// 	14286856,
-		// 	net.runelite.api.MenuAction.WIDGET_TARGET,
-		// 	0,
-		// 	-1,
-		// 	'Cast',
-		// 	'',
-		// );
-
-		// bot.menuAction(
-		// 	0,
-		// 	0,
-		// 	net.runelite.api.MenuAction.WIDGET_TARGET_ON_NPC,
-		// 	3305,
-		// 	-1,
-		// 	'Cast',
-		// 	'',
-		// );
-
-		// bot.magic.castOnNpc('WIND_STRIKE', ctx.targetNPC);
-
 		const task = bot.task.create();
 
 		task.act(() => {
@@ -72,7 +34,7 @@ export default createMagicTrainingState(MagicState.Train)
 			);
 		});
 
-		task.sleep(600);
+		task.sleep(getRandomInt(500, 650));
 
 		task.act(() => {
 			setOverlayStatusText('Casting...');
@@ -87,14 +49,14 @@ export default createMagicTrainingState(MagicState.Train)
 			);
 		});
 
-		task.sleep(1200);
+		task.sleep(getRandomInt(600, 800));
 
 		task.act(() => {
 			setOverlayStatusText('Closing Menu...');
 			bot.widgets.interactSpecifiedWidget(34209809, 1, 57, -1);
 		});
 
-		task.sleep(600);
+		task.sleep(getRandomInt(150, 250));
 
 		task.stop();
 

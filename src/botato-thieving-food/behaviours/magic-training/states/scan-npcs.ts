@@ -9,7 +9,7 @@ export default createMagicTrainingState(MagicState.ScanNpcs)
 	.onEnter(() => {
 		setOverlayStatusText('Scanning for training NPCs...');
 	})
-	.transitions(MagicState.Train)
+	.transitions(MagicState.SelectSpell)
 	.onTick((ctx) => {
 		const npcs = bot.npcs
 			.getWithNames(MagicTrainingTargetNames)
@@ -31,6 +31,6 @@ export default createMagicTrainingState(MagicState.ScanNpcs)
 		}
 
 		ctx.targetNPC = closest;
-		return [MagicState.Train];
+		return [MagicState.SelectSpell];
 	})
 	.build();

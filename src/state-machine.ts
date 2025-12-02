@@ -34,11 +34,13 @@ export type StateConfig<
 	onTick: (ctx: C) => AllowedTickReturn<S, C, StateConfig<S, T, C, P, M>>;
 
 	/** Optional check-transition override (still respects allowed transitions) */
-	onCheckTransition?: (ctx: C) => T[number] | null | undefined;
+	onCheckTransition?: (
+		ctx: C,
+	) => AllowedTickReturn<S, C, StateConfig<S, T, C, P, M>>;
 };
 
 /** A transition tuple: ['NextState'] */
-export type TransitionTuple<S extends string> = [S];
+export type TransitionTuple<S extends string> = [] | [S] | [S, number];
 
 /** Compute the allowed return type of onTick based on transitions */
 type AllowedTickReturn<
@@ -250,30 +252,36 @@ export class StateMachine<
 
 		// Handle timeout if set
 		if (this.timeoutCounter != null) {
-			this.timeoutCounter -= 1;
-
-			if (this.timeoutCounter > 0) return;
-			this.timeoutCounter = null;
+			if (this.timeoutCounter > 0) {
+				this.timeoutCounter -= 1;
+				return;
+			} else {
+				this.timeoutCounter = null;
+			}
 		}
 
 		try {
 			// TODO: onCheckTransition could tick right after transitioning, that way we're not wasting ticks.
 			if (!this.options?.onCheckTransitionAfterTick) {
-				const next = cfg.onCheckTransition?.(this.context) as
-					| void
-					| [S]
-					| [];
+				const next = cfg.onCheckTransition?.(this.context);
 
 				if (next && Array.isArray(next)) {
 					if (next.length === 0) {
 						return [];
 					}
 
+					const [nextTransition, timeout]: [S?, number?] = next;
+
 					if (
+						nextTransition &&
 						Array.isArray(cfg.transitions) &&
-						(cfg.transitions as string[]).includes(next[0])
+						(cfg.transitions as S[]).includes(nextTransition)
 					) {
-						this.switch(next[0], true);
+						if (timeout) {
+							this.timeoutCounter = timeout;
+						}
+
+						this.switch(nextTransition, true);
 						return;
 					}
 				}
@@ -291,7 +299,11 @@ export class StateMachine<
 			if (Array.isArray(result)) {
 				if (result.length > 0) {
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-					const [to] = result;
+					const [to, timeout] = result;
+					if (timeout) {
+						this.timeoutCounter = timeout;
+					}
+
 					this.switch(to);
 				} else {
 					return []; // empty array signals machine completion
